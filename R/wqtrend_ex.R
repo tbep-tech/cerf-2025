@@ -1,8 +1,7 @@
 library(wqtrends)
 library(tidyverse)
 library(patchwork)
-
-setwd('T:/04_STAFF/MARCUS/01_PRESENTATIONS/CERF_2025')
+library(here)
 
 data(rawdat)
 
@@ -129,7 +128,7 @@ while(yrend1 <= max(tomod$yr)){
     )
 
   idx <- idx + 1
-  outfl <- paste0('wqtrend_ex_figs/p', sprintf('%02d', idx), '.png')
+  outfl <- here(paste0('figs/wqtrend_ex/p', sprintf('%02d', idx), '.png'))
   png(outfl, width = 9, height = 4, units = 'in', res = 300)
   print(p)
   dev.off()
@@ -139,4 +138,4 @@ while(yrend1 <= max(tomod$yr)){
 
 }
 
-system('magick convert -delay 50 -loop 0 *.png wqtrend.gif')
+system('magick convert -delay 50 -loop 0 figs/wqtrend_ex/*.png figs/wqtrend_ex/wqtrend.gif')

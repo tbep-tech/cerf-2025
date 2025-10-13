@@ -1,8 +1,10 @@
 library(ggplot2)
 library(dplyr)
 library(tidyr)
+library(here)
 library(mgcv)      # for GAM
 library(segmented) # for segmented regression
+library(trend)     # for Seasonal Mann-Kendall test
 
 # Set seed for reproducibility
 set.seed(123)
@@ -154,11 +156,11 @@ p8 <- ggplot(df, aes(x = date, y = chlorophyll)) +
 ht <- 3.5
 wd <- 8
 dp <- 150
-ggsave("trend_ex_figs/p1.png", p1, width = wd, height = ht, dpi = dp)
-ggsave("trend_ex_figs/p2.png", p2, width = wd, height = ht, dpi = dp)
-ggsave("trend_ex_figs/p3.png", p3, width = wd, height = ht, dpi = dp)
-ggsave("trend_ex_figs/p4.png", p4, width = wd, height = ht, dpi = dp)
-ggsave("trend_ex_figs/p5.png", p5, width = wd, height = ht, dpi = dp)
-ggsave("trend_ex_figs/p6.png", p6, width = wd, height = ht, dpi = dp)
-ggsave("trend_ex_figs/p7.png", p7, width = wd, height = ht, dpi = dp)
-ggsave("trend_ex_figs/p8.png", p8, width = wd, height = ht, dpi = dp)
+ggsave(here("figs/trend_ex/p1.png"), p1, width = wd, height = ht, dpi = dp)
+ggsave(here("figs/trend_ex/p2.png"), p2, width = wd, height = ht, dpi = dp)
+ggsave(here("figs/trend_ex/p3.png"), p3, width = wd, height = ht, dpi = dp)
+ggsave(here("figs/trend_ex/p4.png"), p4, width = wd, height = ht, dpi = dp)
+ggsave(here("figs/trend_ex/p5.png"), p5, width = wd, height = ht, dpi = dp)
+ggsave(here("figs/trend_ex/p6.png"), p6, width = wd, height = ht, dpi = dp)
+ggsave(here("figs/trend_ex/p7.png"), p7, width = wd, height = ht, dpi = dp)
+ggsave(here("figs/trend_ex/p8.png"), p8, width = wd, height = ht, dpi = dp)
