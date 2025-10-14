@@ -2,12 +2,9 @@ library(ggplot2)
 library(dplyr)
 library(tidyr)
 library(here)
-library(mgcv)      # for GAM
-library(segmented) # for segmented regression
-library(trend)     # for Seasonal Mann-Kendall test
+library(segmented)
 
-# Set seed for reproducibility
-set.seed(123)
+set.seed(1234)
 
 # Generate synthetic water quality data (e.g., chlorophyll-a)
 # 5 years of monthly observations with seasonal pattern and subtle trend
@@ -17,8 +14,8 @@ time_numeric <- as.numeric(dates - min(dates)) / 365.25
 
 # Create data with seasonal cycle, slight non-linear trend, and noise
 seasonal <- 3 * sin(2 * pi * time_numeric)
-trend <- 0.3 * time_numeric + 0.15 * time_numeric^2
-noise <- rnorm(n, 0, 1.5)
+trend <- 0.3 * time_numeric + 0.6 * time_numeric^2
+noise <- rnorm(n, 0, 2)
 chlorophyll <- 8 + seasonal + trend + noise
 chlorophyll <- pmax(chlorophyll, 0.1)  # ensure positive values
 
@@ -29,14 +26,15 @@ df <- data.frame(
   month = as.numeric(format(dates, "%m"))
 )
 
+ylim <- extendrange(range(df$chlorophyll), f = 0.15)
+
 # 1. Raw Data Plot
 p1 <- ggplot(df, aes(x = date, y = chlorophyll)) +
   geom_point(size = 3, alpha = 0.4, color = "steelblue") +
   labs(x = NULL, y = "Chlorophyll-a (μg/L)") +
   theme_minimal(base_size = 14) +
   scale_x_date(date_labels = "%Y", date_breaks = "1 year", expand = c(0.05, 0.05)) +
-  theme(plot.title = element_text(face = "bold")) +
-  coord_cartesian(ylim = c(2, 19))
+  coord_cartesian(ylim = ylim)
 
 # 2. Linear Regression (simple trend line)
 lm_model <- lm(chlorophyll ~ time_numeric, data = df)
@@ -50,10 +48,9 @@ p2 <- ggplot(df, aes(x = date, y = chlorophyll)) +
   scale_x_date(date_labels = "%Y", date_breaks = "1 year", expand = c(0.05, 0.05)) +
   labs(x = NULL, y = "Chlorophyll-a (μg/L)") +
   theme_minimal(base_size = 14) +
-  theme(plot.title = element_text(face = "bold")) +
-  coord_cartesian(ylim = c(2, 19))
+  coord_cartesian(ylim = ylim)
 
-# 3. GAM (Generalized Additive Model) - captures non-linear trends
+# 3. second order polynomial - captures non-linear trends
 poly_model <- lm(chlorophyll ~ poly(time_numeric, 2, raw = TRUE), data = df)
 df$poly_pred <- predict(poly_model)
 
@@ -63,12 +60,10 @@ p3 <- ggplot(df, aes(x = date, y = chlorophyll)) +
   scale_x_date(date_labels = "%Y", date_breaks = "1 year", expand = c(0.05, 0.05)) +
   labs(x = NULL, y = "Chlorophyll-a (μg/L)") +
   theme_minimal(base_size = 14) +
-  theme(plot.title = element_text(face = "bold")) +
-  coord_cartesian(ylim = c(2, 19))
+  coord_cartesian(ylim = ylim)
 
-# 4. Polynomial Regression (overfitting example)
-# Fit a high-degree polynomial (degree 8) - too flexible!
-poly_model <- lm(chlorophyll ~ poly(time_numeric, 8, raw = TRUE), data = df)
+# 4. poly (overfitting example)
+poly_model <- lm(chlorophyll ~ poly(time_numeric, 10, raw = TRUE), data = df)
 df$poly_pred <- predict(poly_model)
 
 p4 <- ggplot(df, aes(x = date, y = chlorophyll)) +
@@ -77,23 +72,20 @@ p4 <- ggplot(df, aes(x = date, y = chlorophyll)) +
   scale_x_date(date_labels = "%Y", date_breaks = "1 year", expand = c(0.05, 0.05)) +
   labs(x = NULL, y = "Chlorophyll-a (μg/L)") +
   theme_minimal(base_size = 14) +
-  theme(plot.title = element_text(face = "bold")) +
-  coord_cartesian(ylim = c(2, 19))
+  coord_cartesian(ylim = ylim)
 
-# 5. Seasonal Mann-Kendall Test (non-parametric, accounts for seasonality)
-mk_results <- smk.test(ts(df$chlorophyll, frequency = 12))
+# 5. by month
 
 p5 <- ggplot(df, aes(x = date, y = chlorophyll, color = factor(month))) +
   geom_point(size = 3, alpha = 0.6) +
-  geom_smooth(aes(group = 1), method = "lm", se = FALSE, 
-              color = "darkgreen", linewidth = 1.2, linetype = "dashed") +
+  geom_smooth(method = "lm", se = FALSE, 
+              linewidth = 1.2, linetype = "dashed") +
   scale_x_date(date_labels = "%Y", date_breaks = "1 year", expand = c(0.05, 0.05)) +
   labs(x = NULL, y = "Chlorophyll-a (μg/L)",
        color = NULL) +
   theme_minimal(base_size = 14) +
-  theme(plot.title = element_text(face = "bold"),
-        legend.position = "none") +
-  coord_cartesian(ylim = c(2, 19))
+  theme(legend.position = "none") +
+  coord_cartesian(ylim = ylim)
 
 # 6. Deseasonalized Trend (removes seasonal component first)
 # Fit seasonal component
@@ -112,8 +104,7 @@ p6 <- ggplot(df, aes(x = date)) +
   labs(x = NULL, y = "Chlorophyll-a (μg/L)") +
   scale_x_date(date_labels = "%Y", date_breaks = "1 year", expand = c(0.05, 0.05)) +
   theme_minimal(base_size = 14) +
-  theme(plot.title = element_text(face = "bold")) +
-  coord_cartesian(ylim = c(2, 19))
+  coord_cartesian(ylim = ylim)
 
 # 7. Segmented Regression (detects change points)
 seg_model <- tryCatch({
@@ -133,8 +124,7 @@ p7 <- ggplot(df, aes(x = date, y = chlorophyll)) +
   labs(x = NULL, y = "Chlorophyll-a (μg/L)") +
   scale_x_date(date_labels = "%Y", date_breaks = "1 year", expand = c(0.05, 0.05)) +
   theme_minimal(base_size = 14) +
-  theme(plot.title = element_text(face = "bold")) +
-  coord_cartesian(ylim = c(2, 19))
+  coord_cartesian(ylim = ylim)
 
 # 8. Uncertainty visualization - what if measurements have error?
 # Add realistic measurement uncertainty (±10-20% typical for chlorophyll)
@@ -149,8 +139,7 @@ p8 <- ggplot(df, aes(x = date, y = chlorophyll)) +
   geom_point(size = 3, alpha = 0.4, color = "steelblue") +
   labs(x = NULL, y = "Chlorophyll-a (μg/L)") +
   theme_minimal(base_size = 14) +
-  theme(plot.title = element_text(face = "bold")) +
-  coord_cartesian(ylim = c(2, 19))
+  coord_cartesian(ylim = ylim)
 
 
 ht <- 3.5

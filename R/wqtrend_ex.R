@@ -129,7 +129,7 @@ while(yrend1 <= max(tomod$yr)){
 
   idx <- idx + 1
   outfl <- here(paste0('figs/wqtrend_ex/p', sprintf('%02d', idx), '.png'))
-  png(outfl, width = 9, height = 4, units = 'in', res = 300)
+  png(outfl, width = 9, height = 4.25, units = 'in', res = 300)
   print(p)
   dev.off()
 
