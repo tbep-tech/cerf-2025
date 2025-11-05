@@ -133,6 +133,13 @@ while(yrend1 <= max(tomod$yr)){
   print(p)
   dev.off()
 
+  if(idx ==1){
+    outfl <- gsub('\\.png$', '.svg', outfl)
+    svg(outfl, width = 9, height = 4.25)
+    print(p)
+    dev.off()
+  }
+  
   yrstr1 <- yrstr1 + 1
   yrend1 <- yrend1 + 1
 
