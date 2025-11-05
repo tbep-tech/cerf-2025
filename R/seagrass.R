@@ -3,10 +3,28 @@ library(tidyverse)
 library(patchwork)
 
 # Seagrass losses in upper Harbor (1988-2022)
-dat <- read.csv(here("data-raw/CH.seagrass.csv"))
+dat <- read.csv(here("data-raw/CH.seagrass.csv")) |> 
+  mutate(
+       yrcat = case_when(
+              Year < 2018 ~ 'a', 
+              Year == 2018 ~ 'b',
+              Year == 2020 ~ 'c',
+              Year == 2022 ~ 'd'
+       )
+  )
 years <- na.omit(dat)$Year
+
 p1 <- ggplot( dat, aes(y=CH.Seagrass.ha / 1000, x=Year) ) + 
-       geom_bar(stat="identity", fill = '#035172', alpha = 0.7) +
+       geom_bar(stat="identity", aes(fill = yrcat), alpha = 0.7) +
+       scale_fill_manual(
+              values = c(
+                     'a' = '#035172',
+                     'b' = rgb(0.1,0.5,0.2,1),
+                     'c' = rgb(0.2,0.6,0.1,1),
+                     'd' = rgb(0.4,0.75,0.1,1)
+              ),          
+              guide = 'none'
+       ) +
        labs(
               x = NULL,
               y = "Coverage (1000 x hectares)", 
